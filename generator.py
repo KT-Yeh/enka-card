@@ -2,6 +2,7 @@ import os
 import re
 import textwrap
 from datetime import datetime
+from io import BytesIO
 
 from enkanetwork import Assets, EnkaNetworkResponse, Language
 from enkanetwork.enum import DigitType, EquipmentsType
@@ -16,8 +17,12 @@ from .utils import (fade_asset_icon, fade_character_art, format_statistics,
 
 
 async def generate_image(
-    data: EnkaNetworkResponse, character: CharacterInfo, locale: Language = Language.EN
-):
+    data: EnkaNetworkResponse,
+    character: CharacterInfo,
+    locale: Language = Language.EN,
+    *,
+    save_locally: bool = True,
+) -> BytesIO:
     """Create language-specific asset-getter"""
     asset_reference = Assets(lang=locale)
 
@@ -689,17 +694,16 @@ async def generate_image(
             font=get_font("normal", 17),
         )
 
-    output_path = current_path + "/output"
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"{character.name}_{timestamp}"
-
     foreground = Image.alpha_composite(foreground, textground)
-    Image.alpha_composite(background, foreground).save(
-        f"{output_path}/{filename}.png", format="png"
-    )
+    result = Image.alpha_composite(background, foreground)
+    
+    if save_locally:
+        output_path = current_path + "/output"
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"{character.name}_{timestamp}"
+        result.save(f"{output_path}/{filename}.png", format="png")
 
     """ 
     If you're using an async environment, might be worth mentioning
@@ -714,5 +718,8 @@ async def generate_image(
         
         return output
     """
+    buffer = BytesIO()
+    result.convert("RGB").save(buffer, format="jpeg")
+    buffer.seek(0)
 
-    return
+    return buffer
