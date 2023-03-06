@@ -10,8 +10,9 @@ from enkanetwork.model.equipments import EquipmentsType
 from PIL import Image, ImageChops, ImageFont, ImageOps
 from pydantic import BaseModel
 
-from prop_reference import ELEMENT_REFERENCE, RELIQUARY_STATS
+from .prop_reference import ELEMENT_REFERENCE, RELIQUARY_STATS
 
+current_path = os.path.dirname(os.path.abspath(__file__))
 
 class ActiveSet(BaseModel):
     name: str
@@ -42,6 +43,7 @@ def open_image(
     resize: tuple = None,
     resample: int = Image.BICUBIC,
 ) -> Image:
+    path = os.path.join(current_path, path)
     if not os.path.exists(path):
         check_asset(path, asset_url)
 
@@ -81,14 +83,14 @@ def scale_image(
 def get_font(font: Literal["normal"], size: int) -> ImageFont.FreeTypeFont:
     """Helper method to get a font."""
     return {
-        "normal": ImageFont.truetype("attributes/Fonts/JA-JP.TTF", size),
+        "normal": ImageFont.truetype(current_path + "/attributes/Fonts/JA-JP.TTF", size),
         # Insert other fonts you'd like to use here, if any
-    }.get(font, ImageFont.truetype("attributes/Fonts/JA-JP.TTF", size))
+    }.get(font, ImageFont.truetype(current_path + "/attributes/Fonts/JA-JP.TTF", size))
 
 
 def fade_character_art(im: Image) -> Image:
     # Load mask from attributes
-    mask = Image.open("attributes/Assets/enka_character_mask.png").convert("L")
+    mask = Image.open(current_path + "/attributes/Assets/enka_character_mask.png").convert("L")
     mask = mask.resize((im.size[0], im.size[1]), Image.NEAREST)
 
     # Extract alpha channel from original image
@@ -107,7 +109,7 @@ def fade_character_art(im: Image) -> Image:
 
 def fade_asset_icon(im: Image, _type: Literal["artifact"]) -> Image:
     mask_fp = {
-        "artifact": "attributes/Assets/artifact_mask.png",
+        "artifact": current_path + "/attributes/Assets/artifact_mask.png",
         # Insert other masks you'd like to use here, if any
     }.get(_type)
 
