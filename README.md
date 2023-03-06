@@ -25,7 +25,7 @@ Change the UID in `main.py` to your UID.
 import asyncio
 
 from enkanetwork import EnkaNetworkAPI, Language
-from generator import generate_image
+from enka_card.generator import generate_image
 
 client = EnkaNetworkAPI(lang=Language.EN) # <- Change to whichever language you want
 uid = 604905943 # <- Change this to your UID
@@ -35,7 +35,7 @@ async def main():
         data = await client.fetch_user(uid)
         for character in data.characters:
             print(f"[{uid}] Generating enka-card for {character.name}")
-            generate_image(data, character, client.lang)
+            await generate_image(data, character, client.lang)
 
 asyncio.run(main())
 ```
@@ -47,4 +47,4 @@ python main.py
 
 
 
-Your character cards will be output in the `/output` directory. Happy generating!
+Your character cards will be output in the `enka_card/output` directory. Happy generating!
