@@ -15,7 +15,7 @@ from .utils import (fade_asset_icon, fade_character_art, format_statistics,
                    open_image, scale_image, current_path)
 
 
-def generate_image(
+async def generate_image(
     data: EnkaNetworkResponse, character: CharacterInfo, locale: Language = Language.EN
 ):
     """Create language-specific asset-getter"""
@@ -28,7 +28,7 @@ def generate_image(
     BEIGE = (245, 222, 179)
 
     """ BACKGROUND SETUP """
-    background = open_image("attributes/Assets/default_enka_card.png")
+    background = await open_image("attributes/Assets/default_enka_card.png")
 
     background_rgb = {
         "Pyro": (186, 140, 131),
@@ -48,7 +48,7 @@ def generate_image(
     draw = ImageDraw.Draw(textground)
 
     """ FIRST TRIMESTER """
-    character_art = open_image(
+    character_art = await open_image(
         path=f"attributes/Genshin/Gacha/{character.image.banner.filename}.png",
         asset_url=character.image.banner.url,
     )
@@ -60,7 +60,7 @@ def generate_image(
 
     foreground.paste(character_art, (0, 0), character_art)
 
-    character_shade = open_image("attributes/Assets/enka_character_shade.png")
+    character_shade = await open_image("attributes/Assets/enka_character_shade.png")
     foreground.paste(character_shade, (0, 0), character_shade)
 
     w = int(draw.textlength(f"{character.name}", font=get_font("normal", 30)))
@@ -128,7 +128,7 @@ def generate_image(
         font=get_font("normal", 23),
     )
 
-    friendship_icon = open_image("attributes/UI/COMPANIONSHIP.png")
+    friendship_icon = await open_image("attributes/UI/COMPANIONSHIP.png")
     friendship_icon = scale_image(friendship_icon, fixed_height=45)
     foreground.paste(friendship_icon, (34, 108), friendship_icon)
     draw.text(
@@ -139,19 +139,19 @@ def generate_image(
     )
 
     """ Constellations Section """
-    c_overlay = open_image("attributes/Assets/enka_constellation_overlay.png")
+    c_overlay = await open_image("attributes/Assets/enka_constellation_overlay.png")
     c_overlay = scale_image(c_overlay, fixed_height=75)
     ImageDraw.Draw(c_overlay).ellipse(
         (15, 15, 59, 59), fill=(50, 50, 50, 150), outline=background_rgb, width=2
     )
-    lock = open_image("attributes/UI/LOCKED.png", resize=(20, 25))
+    lock = await open_image("attributes/UI/LOCKED.png", resize=(20, 25))
 
     constellation_starting_index = 160
     for index, constellation in enumerate(character.constellations):
         foreground.paste(
             c_overlay, (25, constellation_starting_index + 60 * index), c_overlay
         )
-        constellation_icon = open_image(
+        constellation_icon = await open_image(
             path=f"attributes/Genshin/UI/{constellation.icon.filename}.png",
             asset_url=constellation.icon.url,
         )
@@ -182,14 +182,14 @@ def generate_image(
         )
 
     """ Talents Section """
-    talent_overlay = open_image(f"attributes/Assets/enka_talent_overlay.png")
+    talent_overlay = await open_image(f"attributes/Assets/enka_talent_overlay.png")
     talent_overlay = scale_image(talent_overlay, fixed_height=80)
 
     for index, skill in enumerate(character.skills):
         for _ in range(4):
             foreground.paste(talent_overlay, (430, 305 + 90 * index), talent_overlay)
 
-        sk = open_image(
+        sk = await open_image(
             path=f"attributes/Genshin/UI/{skill.icon.filename}.png",
             asset_url=skill.icon.url,
             resize=(50, 50),
@@ -218,7 +218,7 @@ def generate_image(
         )
 
     weapon = character.equipments[-1]
-    weapon_image = open_image(
+    weapon_image = await open_image(
         path=f"attributes/Genshin/Weapon/{weapon.detail.icon.filename}.png",
         asset_url=weapon.detail.icon.url,
     )
@@ -227,7 +227,7 @@ def generate_image(
     foreground.paste(weapon_image, (555, 25), weapon_image)
 
     rarity_light = scale_image(
-        open_image(
+        await open_image(
             f"attributes/UI/{RARITY_REFERENCE[str(weapon.detail.rarity)]}_WEAPON_LIGHT.png"
         ),
         fixed_height=40,
@@ -237,7 +237,7 @@ def generate_image(
     )
 
     rarity = scale_image(
-        open_image(f"attributes/UI/{RARITY_REFERENCE[str(weapon.detail.rarity)]}.png"),
+        await open_image(f"attributes/UI/{RARITY_REFERENCE[str(weapon.detail.rarity)]}.png"),
         fixed_height=25,
     )
 
@@ -251,7 +251,7 @@ def generate_image(
         draw.textlength(f"{weapon.detail.name}", font=get_font("normal", 22))
     )
 
-    def draw_weapon_information(line_buffer: int = 0):
+    async def draw_weapon_information(line_buffer: int = 0):
         # Weapon Main Stat
         mainstat = weapon.detail.mainstats
         w = int(
@@ -269,7 +269,7 @@ def generate_image(
             radius=4,
         )
 
-        image = open_image(f"attributes/UI/{get_stat_filename(mainstat.prop_id)}.png")
+        image = await open_image(f"attributes/UI/{get_stat_filename(mainstat.prop_id)}.png")
         icon_file = scale_image(image, fixed_height=30)
         icon_file = ImageEnhance.Brightness(icon_file).enhance(2)
 
@@ -306,7 +306,7 @@ def generate_image(
                 radius=4,
             )
 
-            image = open_image(
+            image = await open_image(
                 f"attributes/UI/{get_stat_filename(substat.prop_id)}.png"
             )
             icon_file = scale_image(image, fixed_height=30)
@@ -391,7 +391,7 @@ def generate_image(
             (690, 32), f"{weapon.detail.name}", font=get_font("normal", 22), anchor="lt"
         )
 
-        draw_weapon_information(line_buffer=5)
+        await draw_weapon_information(line_buffer=5)
     else:
         weapon_name = textwrap.wrap(f"{weapon.detail.name}", width=20)
 
@@ -400,13 +400,13 @@ def generate_image(
                 (690, 32 + (index * 25)), line, font=get_font("normal", 22), anchor="lt"
             )
 
-        draw_weapon_information(line_buffer=28 * index)
+        await draw_weapon_information(line_buffer=28 * index)
 
     all_stats = format_statistics(character)
     statistic_buffer = 365 // len(all_stats)
     for index, item in enumerate(all_stats):
         """Draw Icon for Stat"""
-        image = open_image(f"attributes/UI/{get_stat_filename(item)}.png")
+        image = await open_image(f"attributes/UI/{get_stat_filename(item)}.png")
         icon_file = scale_image(image, fixed_height=30)
         icon_file = ImageEnhance.Brightness(icon_file).enhance(2)
 
@@ -495,7 +495,7 @@ def generate_image(
             continue
 
         artif_icon = fade_asset_icon(
-            open_image(
+            await open_image(
                 path=f"attributes/Genshin/Artifact/{artifact.detail.icon.filename}.png",
                 asset_url=artifact.detail.icon.url,
                 resize=(190, 190),
@@ -518,7 +518,7 @@ def generate_image(
             width=2,
         )
 
-        image = open_image(
+        image = await open_image(
             f"attributes/UI/{get_stat_filename(artifact.detail.mainstats.prop_id)}.png"
         )
         icon_file = scale_image(image, fixed_height=30)
@@ -560,7 +560,7 @@ def generate_image(
         )
 
         rarity = scale_image(
-            open_image(
+            await open_image(
                 f"attributes/UI/{RARITY_REFERENCE[str(artifact.detail.rarity)]}.png"
             ),
             fixed_height=18,
@@ -580,7 +580,7 @@ def generate_image(
 
             position = {0: [0, 0], 1: [1, 0], 2: [0, 1], 3: [1, 1]}.get(index)
 
-            image = open_image(f"attributes/UI/{get_stat_filename(subst.prop_id)}.png")
+            image = await open_image(f"attributes/UI/{get_stat_filename(subst.prop_id)}.png")
             icon_file = scale_image(image, fixed_height=30)
             icon_file = ImageEnhance.Brightness(icon_file).enhance(2)
 
@@ -608,7 +608,7 @@ def generate_image(
         (555, 547, 555 + 48, 547 + 48), fill=(0, 0, 0, 50), radius=5
     )
 
-    flower_of_life = open_image(
+    flower_of_life = await open_image(
         "attributes/Assets/flower_of_life_icon.png", resize=(35, 35)
     )
     foreground.paste(flower_of_life, (562, 555), flower_of_life)

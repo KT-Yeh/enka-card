@@ -2,7 +2,7 @@ import os
 from collections import Counter
 from typing import List, Literal
 
-import requests
+import aiohttp
 from enkanetwork.enum import EquipmentsType
 from enkanetwork.model import Stats
 from enkanetwork.model.character import CharacterInfo
@@ -19,24 +19,29 @@ class ActiveSet(BaseModel):
     count: int
 
 
-def check_asset(path: str, asset_url: str) -> None:
+async def check_asset(path: str, asset_url: str) -> None:
     """Helper function to check if an asset
     exists given a path and reference to the
     asset's source. If the asset does not exist,
     the asset will be downloaded from the source.
     """
 
-    if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.exists(path):
+        return
+    
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(asset_url) as response:
+            if response.status != 200:
+                raise Exception("There was an error downloading the asset.")
+            content = await response.read()
+    
+    with open(path, "wb") as f:
+        f.write(content)
 
-        try:
-            with open(path, "wb") as f:
-                f.write(requests.get(asset_url).content)
-        except:
-            raise Exception("There was an error downloading the asset.")
 
-
-def open_image(
+async def open_image(
     path: str,
     asset_url: str = None,
     mode: str = "RGBA",
@@ -45,7 +50,7 @@ def open_image(
 ) -> Image:
     path = os.path.join(current_path, path)
     if not os.path.exists(path):
-        check_asset(path, asset_url)
+        await check_asset(path, asset_url)
 
     image = Image.open(path)
     image = image.convert(mode)
