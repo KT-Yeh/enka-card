@@ -53,10 +53,20 @@ async def generate_image(
     draw = ImageDraw.Draw(textground)
 
     """ FIRST TRIMESTER """
+    character_bg = Image.new('RGBA', (2048, 1024), (255, 255, 255, 0))
     character_art = await open_image(
         path=f"attributes/Genshin/Gacha/{character.image.banner.filename}.png",
         asset_url=character.image.banner.url,
     )
+    # Center the character art
+    bg_width, bg_height = character_bg.size
+    fg_width, fg_height = character_art.size
+    x = (bg_width - fg_width) // 2
+    y = (bg_height - fg_height) // 2
+    character_bg.paste(character_art, (x, y), character_art)
+    
+    character_art = character_bg
+
     character_art = scale_image(character_art, fixed_percent=90)
     character_art = character_art.crop(
         (615, 85, character_art.width, character_art.height)
